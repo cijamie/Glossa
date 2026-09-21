@@ -1,27 +1,46 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles, ArrowRight, BookOpen, Volume2, CheckCircle2 } from 'lucide-react';
 import { LanguageBar } from './LanguageBar';
 import { SourceCard } from './SourceCard';
 import { TargetCard } from './TargetCard';
 import { TranslateService } from '../../services/translateService';
 import { StorageService } from '../../services/storageService';
+import { SpeechService } from '../../services/speechService';
+import { SRSService } from '../../services/srsService';
 import { TranslationResult, UserSettings, WordEntry } from '../../types';
 
 interface TranslatorViewProps {
   settings: UserSettings;
   onUpdateSettings: (settings: Partial<UserSettings>) => void;
   onWordBankUpdated: () => void;
+  onNavigateToStudy: () => void;
+  onNavigateToWordBank: () => void;
 }
 
 export const TranslatorView: React.FC<TranslatorViewProps> = ({
   settings,
   onUpdateSettings,
-  onWordBankUpdated
+  onWordBankUpdated,
+  onNavigateToStudy,
+  onNavigateToWordBank
 }) => {
   const [sourceText, setSourceText] = useState('');
   const [translation, setTranslation] = useState<TranslationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const debounceTimer = useRef<any>(null);
+
+  const [recentWords, setRecentWords] = useState<WordEntry[]>([]);
+
+  const refreshRecent = () => {
+    const all = StorageService.loadWordBank();
+    setRecentWords(all.slice(0, 4));
+  };
+
+  useEffect(() => {
+    refreshRecent();
+  }, []);
 
   // Check if current text is saved in word bank
   useEffect(() => {
@@ -75,7 +94,7 @@ export const TranslatorView: React.FC<TranslatorViewProps> = ({
     if (settings.autoTranslate) {
       debounceTimer.current = setTimeout(() => {
         executeTranslate(newText);
-      }, 500);
+      }, 400);
     }
   };
 
@@ -111,7 +130,7 @@ export const TranslatorView: React.FC<TranslatorViewProps> = ({
     if (!sourceText.trim() || !translation?.translatedText) return;
 
     if (isSaved) {
-      // Find and remove
+      // Remove
       const words = StorageService.loadWordBank();
       const match = words.find(
         w => w.sourceText.trim().toLowerCase() === sourceText.trim().toLowerCase() &&
@@ -121,6 +140,8 @@ export const TranslatorView: React.FC<TranslatorViewProps> = ({
         StorageService.deleteWord(match.id);
         setIsSaved(false);
         onWordBankUpdated();
+        refreshRecent();
+        showToast('Removed from Word Bank');
       }
     } else {
       // Add new word entry
@@ -138,13 +159,37 @@ export const TranslatorView: React.FC<TranslatorViewProps> = ({
       StorageService.addWord(newEntry);
       setIsSaved(true);
       onWordBankUpdated();
+      refreshRecent();
+      showToast(`Added "${newEntry.sourceText}" to your Word Bank!`);
     }
   };
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const dueCount = StorageService.loadWordBank().filter(w => SRSService.isDue(w)).length;
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
-      {/* Google Translate Container */}
-      <div className="rounded-2xl shadow-md border border-[#dadce0] dark:border-[#3c4043] overflow-hidden">
+    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+      
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-3 text-sm animate-bounce">
+          <CheckCircle2 className="w-5 h-5 text-green-400" />
+          <span>{toastMessage}</span>
+          <button
+            onClick={onNavigateToStudy}
+            className="ml-2 text-xs font-bold text-google-blue bg-white px-2.5 py-1 rounded-lg hover:bg-gray-100"
+          >
+            Study Now
+          </button>
+        </div>
+      )}
+
+      {/* Main Google Translate Box */}
+      <div className="rounded-3xl shadow-md border border-[#dadce0] dark:border-[#3c4043] overflow-hidden bg-white dark:bg-[#202124]">
         
         {/* Language Selection Header Bar */}
         <LanguageBar
@@ -186,17 +231,89 @@ export const TranslatorView: React.FC<TranslatorViewProps> = ({
 
       </div>
 
-      {/* Quick Tips / Keyboard shortcuts */}
-      <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-[#5f6368] dark:text-[#9aa0a6] px-2">
-        <div>
-          Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 font-mono text-[11px]">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 font-mono text-[11px]">Enter</kbd> to translate instantly.
+      {/* Quick Access & Recent Word Bank Strip */}
+      <div className="bg-white dark:bg-[#202124] rounded-2xl border border-gray-200 dark:border-[#3c4043] p-4 sm:p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <BookOpen className="w-4 h-4 text-google-blue" />
+            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+              Recent Saved Words
+            </span>
+            <span className="text-xs text-gray-400">
+              (Auto-saved to your personal dictionary)
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onNavigateToWordBank}
+              className="text-xs font-semibold text-google-blue hover:underline"
+            >
+              View All Words →
+            </button>
+            {dueCount > 0 && (
+              <button
+                onClick={onNavigateToStudy}
+                className="px-3 py-1 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold shadow-sm transition-all flex items-center space-x-1"
+              >
+                <span>Practice {dueCount} Due</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-          <span>Current Engine: <strong className="capitalize text-google-blue dark:text-blue-400">{settings.engine}</strong></span>
-          <span>•</span>
-          <span>Dictionary items auto-sync with Cookies</span>
+
+        {recentWords.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+            {recentWords.map(w => (
+              <div
+                key={w.id}
+                className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between hover:border-google-blue transition-colors group"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[11px] text-gray-400 font-bold uppercase">
+                    <span>{w.sourceLang} → {w.targetLang}</span>
+                    <button
+                      onClick={() => SpeechService.speak(w.sourceText, w.sourceLang)}
+                      className="text-gray-400 hover:text-google-blue"
+                      title="Listen"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="font-medium text-sm text-gray-900 dark:text-white truncate mt-1">
+                    {w.sourceText}
+                  </div>
+                  <div className="font-semibold text-sm text-google-blue dark:text-blue-400 truncate">
+                    {w.translatedText}
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-2 border-t border-gray-200/60 dark:border-gray-700/40 flex items-center justify-between text-[10px] text-gray-400">
+                  <span className="capitalize">{w.srs.masteryStage}</span>
+                  <span className="text-google-blue font-medium">SRS</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-4 text-center text-xs text-gray-400">
+            No words saved yet. Click the <strong className="text-google-blue">+ Add to Word Bank</strong> button on any translation to start building your flashcards!
+          </div>
+        )}
+      </div>
+
+      {/* Helpful shortcuts info */}
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-2">
+        <div className="flex items-center space-x-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <span>Translate words, save to Word Bank, and let the SRS schedule your daily reviews.</span>
+        </div>
+        <div className="hidden sm:inline">
+          Active Engine: <strong className="capitalize text-google-blue">{settings.engine}</strong>
         </div>
       </div>
+
     </div>
   );
 };

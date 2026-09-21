@@ -73,6 +73,8 @@ export function App() {
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             onWordBankUpdated={handleWordsChanged}
+            onNavigateToStudy={() => setActiveTab('srs')}
+            onNavigateToWordBank={() => setActiveTab('wordbank')}
           />
         )}
 
