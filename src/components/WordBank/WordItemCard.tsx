@@ -119,11 +119,14 @@ export const WordItemCard: React.FC<WordItemCardProps> = ({
             </button>
           </div>
 
-          {/* Romanization if available */}
+          {/* Romanization / Pronunciation badge */}
           {word.romanization && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 italic">
-              {word.romanization}
-            </p>
+            <div className="pt-0.5">
+              <span className="text-xs font-semibold text-google-blue dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md inline-flex items-center space-x-1">
+                <span>🗣️</span>
+                <span>{word.romanization}</span>
+              </span>
+            </div>
           )}
         </div>
 

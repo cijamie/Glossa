@@ -8,6 +8,7 @@ export interface TranslationResult {
   translatedText: string;
   detectedLang?: string;
   romanization?: string | null;
+  sourceRomanization?: string | null;
   dictionary?: Array<{ pos: string; words: string[] }>;
   engine: 'google' | 'mymemory' | 'libre' | 'deepl';
   fallbackFrom?: string;

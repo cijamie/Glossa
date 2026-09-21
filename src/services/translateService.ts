@@ -17,11 +17,19 @@ export class TranslateService {
         const data = await res.json();
         let translatedText = '';
         let romanization: string | null = null;
+        let sourceRomanization: string | null = null;
 
         if (Array.isArray(data[0])) {
           for (const item of data[0]) {
             if (item[0]) translatedText += item[0];
-            if (item[3]) romanization = item[3];
+            // Target romanization (e.g. Romaji/Hangul pronunciation)
+            if (!item[0] && item[2]) {
+              romanization = item[2];
+            }
+            // Source romanization
+            if (item[3]) {
+              sourceRomanization = item[3];
+            }
           }
         }
 
@@ -43,6 +51,7 @@ export class TranslateService {
           translatedText,
           detectedLang,
           romanization,
+          sourceRomanization,
           dictionary: dict,
           engine: 'google'
         };

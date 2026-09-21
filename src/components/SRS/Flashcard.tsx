@@ -121,9 +121,10 @@ export const Flashcard: React.FC<FlashcardProps> = ({ word, onGrade }) => {
                 {word.translatedText}
               </h2>
               {word.romanization && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                  {word.romanization}
-                </p>
+                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/70 text-google-blue dark:text-blue-300 text-sm sm:text-base font-semibold tracking-wide">
+                  <span>🗣️</span>
+                  <span>{word.romanization}</span>
+                </div>
               )}
               {word.notes && (
                 <div className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#2d2f31] p-2.5 rounded-xl max-w-sm mx-auto">

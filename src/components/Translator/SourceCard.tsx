@@ -9,6 +9,7 @@ interface SourceCardProps {
   onTranslate: () => void;
   sourceLang: string;
   detectedLang?: string;
+  sourceRomanization?: string | null;
   isLoading: boolean;
 }
 
@@ -19,6 +20,7 @@ export const SourceCard: React.FC<SourceCardProps> = ({
   onTranslate,
   sourceLang,
   detectedLang,
+  sourceRomanization,
   isLoading
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -54,6 +56,13 @@ export const SourceCard: React.FC<SourceCardProps> = ({
           className="w-full flex-1 bg-transparent text-[#202124] dark:text-[#e8eaed] placeholder-gray-400 dark:placeholder-gray-500 text-lg sm:text-xl font-normal resize-none focus:outline-none leading-relaxed"
           rows={6}
         />
+
+        {/* Source Phonetic Reading / Romanization */}
+        {sourceRomanization && text.trim() && (
+          <div className="pt-2 text-sm text-gray-500 dark:text-gray-400 italic">
+            🗣️ {sourceRomanization}
+          </div>
+        )}
 
         {/* Clear Button */}
         {text && (

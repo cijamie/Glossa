@@ -63,10 +63,22 @@ export const TargetCard: React.FC<TargetCardProps> = ({
               {translation.translatedText}
             </div>
 
-            {/* Romanization / Phonetics if provided */}
+            {/* Romanization / Phonetics (how to speak Japanese/Korean/Chinese/etc.) */}
             {translation.romanization && (
-              <div className="text-sm text-[#5f6368] dark:text-[#9aa0a6] italic font-medium">
-                {translation.romanization}
+              <div className="flex items-center space-x-2.5 pt-1 pb-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/70 text-google-blue dark:text-blue-300">
+                  Pronounce
+                </span>
+                <span className="text-base sm:text-lg text-gray-800 dark:text-gray-200 font-semibold select-text">
+                  {translation.romanization}
+                </span>
+                <button
+                  onClick={handleSpeak}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-google-blue hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  title="Listen to pronunciation"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
               </div>
             )}
 

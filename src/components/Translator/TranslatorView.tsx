@@ -215,6 +215,7 @@ export const TranslatorView: React.FC<TranslatorViewProps> = ({
             onTranslate={() => executeTranslate()}
             sourceLang={settings.sourceLang}
             detectedLang={translation?.detectedLang}
+            sourceRomanization={translation?.sourceRomanization}
             isLoading={isLoading}
           />
 
